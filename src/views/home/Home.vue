@@ -3,29 +3,40 @@
     <nav-bar class="home-nav">
         <div slot="center">购物街</div>
     </nav-bar>
-    <home-swiper :banners="banners"></home-swiper>
-    <recommend-view :recommends="recommends"></recommend-view>
-    <feature-view></feature-view>
-    <tab-control class="tab-control" :titles="['流行','新款','精选']"></tab-control>
-    <goods-list :goods="goods['pop'].list"></goods-list>
+        <scroll class="content" ref="scroll">
+            <home-swiper :banners="banners" ></home-swiper>
+            <recommend-view :recommends="recommends"></recommend-view>
+            <feature-view></feature-view>
+            <tab-control class="tab-control" :titles="['流行','新款','精选']" @tabClick="tabClick"></tab-control>
+            <goods-list :goods="goods[currentType].list"></goods-list>
+        </scroll>
+        <back-top @click.native="backClick"></back-top>
 </div>
 </template>
 <script>
-import GoodsList from 'components/content/goods/GoodsList'
-import NavBar from 'components/common/navbar/NavBar'
 import TabControl from 'components/content/tabControl/TabControl'
+import GoodsList from 'components/content/goods/GoodsList'
+import BackTop from 'components/content/backTop/BackTop'
+
+import NavBar from 'components/common/navbar/NavBar'
+import Scroll from 'components/common/scroll/Scroll'
 
 import {getHomeMultidata,getHomeGoods} from 'network/home'
 
 import RecommendView from './childComps/RecommendView.vue'
 import FeatureView from './childComps/FeatureView.vue'
 import HomeSwiper from './childComps/HomeSwiper'
+
+
+
 export default {
     name:"Home",
     components:{
         GoodsList,
         NavBar,
         TabControl,
+        Scroll,
+        BackTop,
 
         getHomeMultidata,
         getHomeGoods,
@@ -42,7 +53,8 @@ export default {
                 'pop':{page:0,list:[]},
                 'new':{page:0,list:[]},
                 'sell':{page:0,list:[]},
-            }
+            },
+            currentType:'pop'
         }
     },
     created(){
@@ -51,7 +63,29 @@ export default {
         this.getHomeGoods('new')
         this.getHomeGoods('sell')
     },
+    // mounted(){
+    //     this.$refs.swiper
+    // },
     methods:{
+        //事件监听========================================================
+        backClick(){
+            this.$refs.scroll.scrollTo(0,0)
+        },
+        tabClick(index){
+            switch (index){
+                case 0:
+                    this.currentType='pop'
+                    break
+                case 1:
+                    this.currentType='new'
+                    break
+                case 2:
+                    this.currentType='sell'
+            }
+        },
+
+
+        //网络请求========================================================
         getHomeMultidata(){
             getHomeMultidata().then(res=>{
             // this.result=res
@@ -74,6 +108,8 @@ export default {
 <style scoped>
 #home{
     padding-top: 44px;
+    height: 100vh;
+    position: relative;
 }
 .home-nav{
     background-color: var(--color-tint);
@@ -86,7 +122,17 @@ export default {
 }
 .tab-control{
     /* 粘性属性 */
+    background-color: #fff;
     position:sticky;
     top: 44px;
+    z-index: 9999;
+}
+.content{
+    left: 0;
+    right: 0;
+    position: absolute;
+    bottom: 49px;
+    top: 44px;
+    overflow: hidden;
 }
 </style>
