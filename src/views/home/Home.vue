@@ -3,14 +3,14 @@
     <nav-bar class="home-nav">
         <div slot="center">购物街</div>
     </nav-bar>
-        <scroll class="content" ref="scroll">
+        <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" :pullUpLoad="true" @pullingUp="loadMore">
             <home-swiper :banners="banners" ></home-swiper>
             <recommend-view :recommends="recommends"></recommend-view>
             <feature-view></feature-view>
-            <tab-control class="tab-control" :titles="['流行','新款','精选']" @tabClick="tabClick"></tab-control>
+            <tab-control  :titles="['流行','新款','精选']" @tabClick="tabClick" ref="tabControl"></tab-control>
             <goods-list :goods="goods[currentType].list"></goods-list>
         </scroll>
-        <back-top @click.native="backClick"></back-top>
+        <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
 </div>
 </template>
 <script>
@@ -20,6 +20,7 @@ import BackTop from 'components/content/backTop/BackTop'
 
 import NavBar from 'components/common/navbar/NavBar'
 import Scroll from 'components/common/scroll/Scroll'
+import {debounce} from 'components/common/utils'
 
 import {getHomeMultidata,getHomeGoods} from 'network/home'
 
@@ -54,7 +55,9 @@ export default {
                 'new':{page:0,list:[]},
                 'sell':{page:0,list:[]},
             },
-            currentType:'pop'
+            currentType:'pop',
+            isShowBackTop:false,
+            tabOffsetTop:0
         }
     },
     created(){
@@ -62,12 +65,32 @@ export default {
         this.getHomeGoods('pop')
         this.getHomeGoods('new')
         this.getHomeGoods('sell')
+
     },
-    // mounted(){
-    //     this.$refs.swiper
+    // updated(){
+    //             console.log(this.$refs.tabControl.$el.offsetTop)
+
     // },
+    mounted(){
+        // this.$refs.swiper
+        const refresh=debounce(this.$refs.scroll.refresh,50)
+        this.$bus.$on('itemImageLoad',()=>{
+                refresh()
+        })
+    },
     methods:{
         //事件监听========================================================
+        // loadMore(){
+        // this.getHomeGoods(this.currentType)
+        // this.$refs.scroll.scroll.refresh()
+        // },
+        loadMore(){
+            this.getHomeGoods(this.currentType)
+        },
+        contentScroll(position){
+            // console.log(position)
+            this.isShowBackTop=-(position.y)>1000
+        },
         backClick(){
             this.$refs.scroll.scrollTo(0,0)
         },
@@ -100,6 +123,7 @@ export default {
                 console.log(res);
                 this.goods[type].list.push(...res.data.list)
                 this.goods[type].page+=1
+                this.$refs.scroll.finishPullUp()
             })
         }
     }
@@ -120,17 +144,12 @@ export default {
     top: 0;
     z-index: 9;
 }
-.tab-control{
-    /* 粘性属性 */
-    background-color: #fff;
-    position:sticky;
-    top: 44px;
-    z-index: 9999;
-}
+
 .content{
+    position: absolute;
     left: 0;
     right: 0;
-    position: absolute;
+    
     bottom: 49px;
     top: 44px;
     overflow: hidden;
