@@ -3,11 +3,12 @@
     <nav-bar class="home-nav">
         <div slot="center">购物街</div>
     </nav-bar>
+<tab-control v-show="isTabFixed" class="tab-control"  :titles="['流行','新款','精选']" @tabClick="tabClick" ref="tabControl1"></tab-control>
         <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" :pullUpLoad="true" @pullingUp="loadMore">
-            <home-swiper :banners="banners" ></home-swiper>
+            <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper>
             <recommend-view :recommends="recommends"></recommend-view>
             <feature-view></feature-view>
-            <tab-control  :titles="['流行','新款','精选']" @tabClick="tabClick" ref="tabControl"></tab-control>
+            <tab-control  :titles="['流行','新款','精选']" @tabClick="tabClick" ref="tabControl2"></tab-control>
             <goods-list :goods="goods[currentType].list"></goods-list>
         </scroll>
         <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
@@ -57,7 +58,8 @@ export default {
             },
             currentType:'pop',
             isShowBackTop:false,
-            tabOffsetTop:0
+            tabOffsetTop:0,
+            isTabFixed:false
         }
     },
     created(){
@@ -84,12 +86,16 @@ export default {
         // this.getHomeGoods(this.currentType)
         // this.$refs.scroll.scroll.refresh()
         // },
+        swiperImageLoad(){
+            this.tabOffsetTop=this.$refs.tabControl2.$el.offsetTop
+        },
         loadMore(){
             this.getHomeGoods(this.currentType)
         },
         contentScroll(position){
             // console.log(position)
             this.isShowBackTop=-(position.y)>1000
+            this.isTabFixed=(-position.y)>this.tabOffsetTop
         },
         backClick(){
             this.$refs.scroll.scrollTo(0,0)
@@ -105,6 +111,9 @@ export default {
                 case 2:
                     this.currentType='sell'
             }
+            this.$refs.tabControl1.currentIndex=index;
+            this.$refs.tabControl2.currentIndex=index;
+
         },
 
 
@@ -130,19 +139,25 @@ export default {
 }
 </script>
 <style scoped>
+
 #home{
-    padding-top: 44px;
+    /* padding-top: 44px; */
     height: 100vh;
     position: relative;
 }
 .home-nav{
     background-color: var(--color-tint);
-    position: fixed;
+    /* position: fixed; */
     color: #fff;
-    left: 0;
+    /* left: 0;
     right: 0;
     top: 0;
+    z-index: 9; */
+}
+.tab-control{
+    position: relative;
     z-index: 9;
+    background-color: #fff;
 }
 
 .content{
