@@ -59,7 +59,8 @@ export default {
             currentType:'pop',
             isShowBackTop:false,
             tabOffsetTop:0,
-            isTabFixed:false
+            isTabFixed:false,
+            saveY:0
         }
     },
     created(){
@@ -79,6 +80,13 @@ export default {
         this.$bus.$on('itemImageLoad',()=>{
                 refresh()
         })
+    },
+    activated(){
+        this.$refs.scroll.scrollTo(0,this.saveY,0)
+        this.$refs.scroll.refresh()
+    },
+    deactivated(){
+        this.saveY=this.$refs.scroll.scroll.y
     },
     methods:{
         //事件监听========================================================
